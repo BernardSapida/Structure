@@ -1,0 +1,115 @@
+Continuation = EC
+
+Joints: Red
+EC: BLUE
+
+SUPPORT: NOT_JOINED_WITH_MEMBER
+
+1) Prompt user what type of structure to solve
+    [1] Beams & Frames
+    [2] Trusses
+2) 
+    For Beams & Frames:
+        Prompt user option to plot
+            [1] Support
+            [2] Releases
+            [3] Compute for degree of indeterminacy (Auto Compute)
+    For Trusses:
+        Prompt user option to plot
+            [1] Support
+            [2] Joints
+            [3] Compute for degree of indeterminacy (Auto Compute)
+
+Support Case:
+    NOTE: Roller 1, Pin 2, Fixed 3 = Reactions
+    Prompt if support is betweeen the member: Yes or No
+
+    If yes:
+        Member coordinate: x y, x y
+    else:
+        *** dont ask for member coordinate ***
+
+    Prompt user what type of support to plot
+        [1] Roller
+            Roller coordinate: x y
+        [2] Pin
+            Pin Coordinate: x y
+            Face: 
+                [1] Up
+                [2] Down
+                [3] Left
+                [4] Right
+        [3] Fixed
+            Fixed coordinate: x y
+            alignment: 
+                [1] horizontal
+                [2] vertical
+        
+        if yes:
+            validate if support coordinate is betweeen the member
+        else:
+            *** Proceed to next logic ***
+
+Releases Case:
+    NOTE: Hinge 1, Roller 2 = EC
+    Prompt user what type of release to plot
+        [1] Hinge
+            Prompt hinge category:
+                [1] A hinge with 1 member
+                    Hinge coordinate (start coordinate of member 1): x y (Join with member)
+                    Member end coordinate: x y
+
+                [2] A hinge with 2 members
+                    Member 1 start coordinate: x y (Should join with any plot), x y (also the coordinate of hinge and start coordinate of member 2)
+                    Member 2 end coordinates: x y (Should join with any plot)
+
+        [2] Roller
+            Alignment: 
+                [1] horizontal
+                [2] vertical
+
+            if horizontal:
+                Roller left member position: Top or Bottom (of the Roller)
+                Start with left or right member: left or right
+                
+                if left:
+                    Left member coordinate: x y (Should join with any plot), x y (Should not join with any plot)
+                    
+                    if roller left member position is TOP:
+                        *** PLOT ROLLER at the bottom of left member end coordinate (Y: -1) ***
+                    else:
+                        *** PLOT ROLLER at the top of left member end coordinate (Y: +1) ***
+                    
+                    Right member end coordinate: xy (Should join with any plot)
+                else:
+                    Right member coordinate: x y (Should join with any plot), x y (Should not join with any plot)
+
+                    if roller left member position is TOP:
+                        *** PLOT ROLLER at the top of right member end coordinate (Y: +1) ***
+                    else:
+                        *** PLOT ROLLER at the bottom of right member end coordinate (Y: -1) ***
+
+                    Left member end coordinate: x y (Should join with any plot)
+            
+            if vertical:
+                Roller bottom member position: left or right (of the Roller)
+                Start with bottom or top member: bottom or top
+            
+                if bottom:
+                    Bottom member coordinate: x y (Should join with any plot)
+
+                    if roller bottom member position is left:
+                        *** PLOT ROLLER at the right of bottom member end coordinate (x: +1) ***
+                    else:
+                        *** PLOT ROLLER at the left of bottom member end coordinate (X: -1) ***
+
+                    Top member end coordinate: x y (Should join with any plot)
+                else:
+                    Top member coordinate: x y (Should join with any plot)
+
+                    if roller bottom member position is left:
+                        *** PLOT ROLLER at the left of top member end coordinate (x: -1) ***
+                    else:
+                        *** PLOT ROLLER at the right of top member end coordinate (X: +1) ***
+
+                    Bottom member end coordinate: x y (Should join with any plot)            
