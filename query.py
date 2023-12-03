@@ -57,7 +57,7 @@ def release_type():
             print("Invalid input! Please try again.")
 
 def beam_options():
-        pattern = re.compile(r'^(1|2|3|4|5)$')
+        pattern = re.compile(r'^(1|2|3|4)$')
 
         while True:
             print("\n=========================================================\n")
@@ -66,7 +66,6 @@ def beam_options():
             print("[2] Plot support")
             print("[3] Plot release")
             print("[4] Show graph")
-            print("[5] Compute degree of indeterminacy")
             user_input = input('Choice: ')
 
             if pattern.match(user_input):
@@ -75,7 +74,7 @@ def beam_options():
                 print("Invalid input! Please try again.")
 
 def trusses_options():
-        pattern = re.compile(r'^(1|2|3|4|5)$')
+        pattern = re.compile(r'^(1|2|3|4)$')
 
         while True:
             print("\n=========================================================\n")
@@ -84,7 +83,6 @@ def trusses_options():
             print("[2] Plot support")
             print("[3] Plot joint")
             print("[4] Show graph")
-            print("[5] Compute degree of indeterminacy")
             user_input = input('Choice: ')
 
             if pattern.match(user_input):
@@ -164,7 +162,7 @@ def pin_face():
 
     while True:
         print("\n=========================================================\n")
-        print("Choose structure to solve:")
+        print("Choose pin face:")
         print("[1] Up")
         print("[2] Down")
         print("[3] Left")
@@ -189,8 +187,8 @@ def hinge_type():
     while True:
         print("\n=========================================================\n")
         print("Choose a support type to plot bellow:")
-        print("[1] Hinge with 1 member")
-        print("[2] Hinge with 2 members")
+        print("[1] Hinge between 1 member")
+        print("[2] Hinge between 2 members")
         print("[3] Back")
         user_input = input('Choice: ')
 

@@ -1,14 +1,16 @@
 import matplotlib.pyplot as plt
 import re
+import math
 import validate
 import query
-import math
 
 class Structure:
     def __init__(self):
         self.occupied_coords = {}
         self.plotted_members = {}
+        self.plotted_joints = {}
         self.members_node = {}
+        self.isolated_support = {}
 
         self.members_x_coords = []
         self.members_y_coords = []
@@ -39,14 +41,18 @@ class Structure:
         # Trusses
         self.pin_connection_count = 0
 
+        self.structure_to_solve = ''
+
     def plot_all(self):
+        if self.structure_to_solve == 'beam':
+            self.compute_beam_di()
+        else:
+            self.compute_trusses_di()
+
         fig, ax = plt.subplots()
 
         plt.scatter(0, 10, color='white')
         plt.scatter(0, -10, color='white')
-        plt.scatter(10, 0, color='white')
-        plt.scatter(-10, 0, color='white')
-        ax.text(0, 9, self.result, ha='center', va='center', fontsize=8, color='blue')
 
         self.plot_members()
         self.plot_rollers()
@@ -58,8 +64,9 @@ class Structure:
 
         ax.set_xlabel('X-axis')
         ax.set_ylabel('Y-axis')
-        # ax.set_title('Structure of Beams, Frames, & Trusses')
+        ax.set_title(self.result if self.result else 'Structure of Beams, Frames, & Trusses')
 
+        print("Close the window to continue...")
         plt.show()
 
     def plot_members(self):
@@ -114,7 +121,7 @@ class Structure:
             coords = query.two_point_coords("Member")
 
             if not coords:
-                return None
+                break
 
             [[x1, y1], [x2, y2]] = coords
             key = f"{x1} {y1} {x2} {y2}"
@@ -124,28 +131,37 @@ class Structure:
                 print("Coordinate is occupied. Please try another coordinate.")
             else:
                 self.add_member(coords[0], coords[1])
+                break
 
     def roller(self):
         while True:
             is_support_between_member = query.is_support_between_member()
             
             if is_support_between_member == None:
-                return None
+                break
             elif is_support_between_member:
                member_coords = self.exists_member_coords()
 
             coords = query.one_point_coords("Roller")
 
             if not coords:
-                return None
+                break
 
             if is_support_between_member:
                 # Validate if coords is within member coordinates
+                member_start_coords = member_coords[0]
+                member_end_coords = member_coords[1]
+                support_coords = " ".join([str(coord) for coord in coords])
+                start_coords = " ".join([str(coord) for coord in member_start_coords])
+                end_coords = " ".join([str(coord) for coord in member_end_coords])
                 is_coords_between = validate.is_coords_between(member_coords[0], member_coords[1], coords)
 
                 if not is_coords_between:
                     print("Roller coordinate is not located between the member line segment! Please try again.")
                     continue
+
+                if not (" ".join(start_coords) == " ".join(support_coords) or " ".join(end_coords) == " ".join(support_coords)):
+                    self.reactions += 1  
 
             key = " ".join([str(coord) for coord in coords])
             is_occupied = self.is_occupied_coords(key)
@@ -154,6 +170,7 @@ class Structure:
                 print("Coordinate is occupied. Please try another coordinate.")
             else:
                 self.add_support(coords, "Roller", key)
+                break
 
     def pin(self):
         while True:
@@ -165,15 +182,23 @@ class Structure:
             coords = query.one_point_coords("Pin")
 
             if not coords:
-                return None
+                break
 
             if is_support_between_member:
                 # Validate if coords is within member coordinates
-                is_coords_between = validate.is_coords_between(member_coords[0], member_coords[1], coords)
+                member_start_coords = member_coords[0]
+                member_end_coords = member_coords[1]
+                support_coords = " ".join([str(coord) for coord in coords])
+                start_coords = " ".join([str(coord) for coord in member_start_coords])
+                end_coords = " ".join([str(coord) for coord in member_end_coords])
+                is_coords_between = validate.is_coords_between(member_start_coords, member_end_coords, coords)
 
                 if not is_coords_between:
                     print("Roller coordinate is not located between the member line segment! Please try again.")
                     continue
+                
+                if not (" ".join(start_coords) == " ".join(support_coords) or " ".join(end_coords) == " ".join(support_coords)):
+                    self.reactions += 2  
 
             key = " ".join([str(coord) for coord in coords])
             is_occupied = self.is_occupied_coords(key)
@@ -185,13 +210,14 @@ class Structure:
             face = query.pin_face()
             coords.append(face)
             self.add_support(coords, "Pin", key)
+            break
 
     def fixed(self):
         while True:
-            coords = query.one_point_coords("Pin")
+            coords = query.one_point_coords("Fixed")
 
             if not coords:
-                return None
+                break
 
             key = " ".join([str(coord) for coord in coords])
             is_occupied = self.is_occupied_coords(key)
@@ -202,6 +228,7 @@ class Structure:
                 alignment = query.fixed_alignment()
                 coords.append(alignment)
                 self.add_support(coords, "Fixed", key)
+                break
 
     def ec_hinge(self):
         if len(self.occupied_coords.values()) == 0:
@@ -256,7 +283,7 @@ class Structure:
                     print("Coordinate is occupied. Please try another coordinate.")
                 else:
                     self.add_member(hinge_coords, member_end_coords)
-                    break
+                    return None
 
     def hinge_two_member(self):
         while True:
@@ -481,13 +508,28 @@ class Structure:
 
         if name == "Roller":
             self.roller_coords.append(coords)
-            self.reactions += 1
+
+            if self.members_node.get(key):
+                self.reactions += 1
+            else:
+                self.isolated_support[key] = "Roller"
+
         elif name == "Pin":
             self.pin_coords.append(coords)
-            self.reactions += 2
+
+            if self.members_node.get(key):
+                self.reactions += 2
+            else:
+                self.isolated_support[key] = "Pin"
+
         elif name == "Fixed":
             self.fixed_coords.append(coords)
-            self.reactions += 3
+
+            if self.members_node.get(key):
+                self.reactions += 3
+            else:
+                self.isolated_support[key] = "Fixed"
+
         elif name == "EC Hinge":
             self.ec_hinge_coords.append(coords)
             self.ec += 1
@@ -505,6 +547,19 @@ class Structure:
         self.joints += 1
         self.plot_all()
 
+    def remove_isolated_support(self, coords):
+        [x, y] = coords
+
+        if self.isolated_support.get(f"{x} {y}"):
+            support_type = self.isolated_support.pop(f"{x} {y}")
+
+            if support_type == "Roller":
+                self.reactions += 1
+            elif support_type == "Pin":
+                self.reactions += 2
+            elif support_type == "Fixed":
+                self.reactions += 3
+
     def add_member(self, start_coords, end_coords):
         [x1, y1] = start_coords
         [x2, y2] = end_coords
@@ -518,6 +573,9 @@ class Structure:
             self.members_node[f"{x2} {y2}"] = 1
         else:
             self.members_node[f"{x2} {y2}"] += 1
+
+        self.remove_isolated_support(start_coords)
+        self.remove_isolated_support(end_coords)
 
         key = f"{x1} {y1} {x2} {y2}"
         self.occupied_coords[key] = True
@@ -534,10 +592,10 @@ class Structure:
     def can_plot_joint(self, coords):
         [x, y] = coords
 
-        if self.members_node.get(f"{x} {y}") == None or self.members_node.get(f"{x} {y}") < 2 or self.members_node.get(f"{x} {y}") > 2:
+        if self.members_node.get(f"{x} {y}") == None or self.members_node.get(f"{x} {y}") < 2 or self.plotted_joints.get(f"{x} {y}"):
             return False
         
-        self.members_node[f"{x} {y}"] += 1
+        self.plotted_joints[f"{x} {y}"] = True
         return True
 
     def remove_member(self, key):
@@ -583,6 +641,7 @@ class Structure:
 
             if self.can_plot_joint(coords):
                 self.add_joint(coords)
+                break
             else:
                 print("Cannot apply joint in this coordinate! Please try again.")
                 continue
@@ -613,9 +672,7 @@ class Structure:
             elif option == '3':
                 self.release()
             elif option == '4':
-                self.plot_all()       
-            elif option == '5':
-                self.compute_beam_di()                
+                self.plot_all()             
 
     def trusses(self):
         while True:
@@ -628,50 +685,37 @@ class Structure:
             elif option == '3':
                 self.joint()
             elif option == '4':
-                self.plot_all()       
-            elif option == '5':
-                self.compute_trusses_di()     
+                self.plot_all()   
 
     def compute_beam_di(self):
         self.degree_of_indeterminacy = self.reactions - (3 + self.ec)
         
-        print("\n=========================================================\n")
-        print("RESULT: ")
         if self.degree_of_indeterminacy < 0:
             self.result = "Statistically Unstable Externally"
-            print(self.result)
         elif self.degree_of_indeterminacy == 0:
             self.result = "Statistically Determinate Externally"
             print(self.result)
         else:
-            self.result = f"DI = {self.degree_of_indeterminacy}"
-            print(self.result)
+            self.result = f"Statically Indeterminate Externally\nDI = {self.degree_of_indeterminacy}"
 
-        self.plot_all()
-            
     def compute_trusses_di(self):
         self.degree_of_indeterminacy = (self.members + self.reactions) - 2 * self.joints
         
-        print("\n=========================================================\n")
-        print("RESULT: ")
         if self.degree_of_indeterminacy < 0:
             self.result = "Statistically Unstable Externally"
-            print(self.result)
         elif self.degree_of_indeterminacy == 0:
             self.result = "Statistically Determinate Externally"
-            print(self.result)
         else:
-            self.result = f"DI = {self.degree_of_indeterminacy}"
-            print(self.result)
-
-        self.plot_all()
+            self.result = f"Statically Indeterminate Externally\nDI = {self.degree_of_indeterminacy}"
 
     def start(self):
         option = query.structure_to_solve()
 
         if option == '1':
+            self.structure_to_solve = 'beam'
             self.beams()
         elif option == '2':
+            self.structure_to_solve = 'trusses'
             self.trusses()
 
 structure = Structure()

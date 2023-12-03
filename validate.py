@@ -1,4 +1,5 @@
 import math
+import re
 
 def two_point_input_coordinates(user_input):
     '''
@@ -7,27 +8,26 @@ def two_point_input_coordinates(user_input):
 
         Where x and y are integer
     '''
-    try:
-        member_coordinate = user_input.split(', ') # ['x y'], ['x y']
-        start_coordinate = member_coordinate[0].split(' ') # ['x', 'y']
-        end_coordinate = member_coordinate[1].split(' ') # ['x', 'y']
+    pattern = re.compile(r'^-?\d+(\.\d+)?\s-?\d+(\.\d+)?,\s-?\d+(\.\d+)?\s-?\d+(\.\d+)?$')
 
-        # Check if there are exactly two coordinates
-        if len(member_coordinate) != 2 or len(start_coordinate) != 2 or len(end_coordinate) != 2 or start_coordinate == end_coordinate:
-            return False
-
-        return [
-            [
-                float(start_coordinate[0]), 
-                float(start_coordinate[1])
-            ], 
-            [
-                float(end_coordinate[0]), 
-                float(end_coordinate[1])
-            ]
-        ]
-    except ValueError:
+    if not pattern.match(user_input):
         return False
+
+    # ['x y'], ['x y']
+    [start_coordinate, end_coordinate] = user_input.split(', ')
+    [x1, y1] = start_coordinate.split(' ')
+    [x2, y2] = end_coordinate.split(' ')
+
+    return [
+        [
+            float(x1), 
+            float(y1)
+        ], 
+        [
+            float(x2), 
+            float(y2)
+        ]
+    ]
 
 def one_point_input_coordinate(user_input):
     '''
@@ -36,17 +36,18 @@ def one_point_input_coordinate(user_input):
 
         Where x and y are integer
     '''
-    try:
-        coordinate = user_input.split(' ') # [x, y]
 
-        # Check if there are exactly two coordinates
-        if len(coordinate) != 2:
-            return False
+    # valid format: 0.00, 0.00
+    pattern = re.compile(r'^-?\d+(\.\d+)?\s-?\d+(\.\d+)?$') 
 
-        return [float(coordinate[0]), float(coordinate[1])]
-    except ValueError:
+    if not pattern.match(user_input):
         return False
-    
+
+    # ['x', 'y'] string coords
+    [x, y] = user_input.split(' ') 
+
+    # [x, y] float coords
+    return [float(x), float(y)] 
 
 def is_coords_between(s, e, c):
     # s = start, e = end, c = center
