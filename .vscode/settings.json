@@ -1,0 +1,9 @@
+{
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "docwriter.custom.author": "Bernard Sapida",
+    "docify.commentService.programmingLanguage": "python",
+    "docify.commentService.docstringFormat": "Doxygen",
+    "docify.commentService.moreExpressiveComments": true,
+    "docify.commentService.inlineComments": false,
+    "docify.commentService.sidePanelReviewMode": false
+}

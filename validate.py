@@ -3,10 +3,17 @@ import re
 
 def two_point_input_coordinates(user_input):
     '''
-        Sample input
-        Input format: x y, x y
+    Validates and parses a user input string representing two sets of coordinates.
 
-        Where x and y are integer
+    Sample input:
+    Input format: x1 y1, x2 y2
+
+    Parameters:
+    user_input (str): The user input string to validate and parse.
+
+    Returns:
+    list or False: A list containing two lists, each representing the x and y coordinates of a point.
+        Returns False if the input does not match the expected format.
     '''
     pattern = re.compile(r'^-?\d+(\.\d+)?\s-?\d+(\.\d+)?,\s-?\d+(\.\d+)?\s-?\d+(\.\d+)?$')
 
@@ -31,10 +38,17 @@ def two_point_input_coordinates(user_input):
 
 def one_point_input_coordinate(user_input):
     '''
-        Sample input
-        Input format: x y
+    Validates and parses a user input string representing a single set of coordinates.
 
-        Where x and y are integer
+    Sample input:
+    Input format: x y
+
+    Parameters:
+    user_input (str): The user input string to validate and parse.
+
+    Returns:
+    list or False: A list containing the x and y coordinates of a point.
+        Returns False if the input does not match the expected format.
     '''
 
     # valid format: 0.00, 0.00
